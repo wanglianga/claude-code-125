@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: uniform-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: uniform
+      MYSQL_USER: uniform
+      MYSQL_PASSWORD: uniform123
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot123"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    ports:
+      - "3306:3306"
+
+  app:
+    build: .
+    container_name: uniform-app
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: uniform
+      DB_PASSWORD: uniform123
+      DB_NAME: uniform
+      SESSION_SECRET: please-change-me-in-production
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
